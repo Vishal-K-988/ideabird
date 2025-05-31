@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [goal, setGoal] = useState<Goal>('None');
   const [audience, setAudience] = useState<Audience>('None');
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -244,197 +245,173 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row relative">
+      {/* Sidebar Toggle Button - Only visible on mobile */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="lg:hidden fixed left-4 top-20 z-50 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition-colors"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          {isSidebarOpen ? (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          )}
+        </svg>
+      </button>
+
       {/* Sidebar */}
       <motion.div 
-        initial={{ x: -300 }}
-        animate={{ x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-64 bg-zinc-900 border-r border-zinc-800 p-4 flex flex-col"
+        initial={false}
+        animate={{
+          x: typeof window !== "undefined" && window.innerWidth >= 1024 ? 0 : isSidebarOpen ? 0 : -320
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`fixed lg:relative w-80 xl:w-96 bg-gray-900 p-4 sm:p-6 lg:p-8 flex flex-col h-[calc(100vh-4rem)] lg:h-screen z-40 ${
+          isSidebarOpen ? 'shadow-2xl' : ''
+        }`}
+        style={{
+          transform: window.innerWidth >= 1024 ? 'none' : undefined
+        }}
       >
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={createNewChat}
-          className="bg-white text-black px-4 py-2 rounded-lg mb-4 font-medium hover:bg-zinc-200 transition-colors"
-        >
-          New Chat
-        </motion.button>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold">Chats</h2>
+          <button
+            onClick={createNewChat}
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-500 text-white rounded-md text-sm sm:text-base hover:bg-blue-600 transition-colors"
+          >
+            New Chat
+          </button>
+        </div>
         
-        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <AnimatePresence>
-            {chats.map((chat) => (
-              <motion.div
-                key={chat.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors ${
-                  chat.id === currentChatId 
-                    ? 'bg-zinc-800' 
-                    : 'hover:bg-zinc-800/50'
-                }`}
-                onClick={() => setCurrentChatId(chat.id)}
-              >
-                <div className="text-sm truncate">
-                  {chat.messages[0]?.content || 'New Chat'}
-                </div>
-                <div className="text-xs text-zinc-500 mt-1">
-                  {new Date(chat.updatedAt).toLocaleDateString()}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+        <div className="flex flex-col gap-2 overflow-y-auto flex-1">
+          {chats.map((chat) => (
+            <button
+              key={chat.id}
+              onClick={() => {
+                setCurrentChatId(chat.id);
+                if (window.innerWidth < 1024) {
+                  setIsSidebarOpen(false);
+                }
+              }}
+              className={`text-left p-3 sm:p-4 rounded-md text-sm sm:text-base ${
+                currentChatId === chat.id
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-800 hover:bg-gray-700'
+              }`}
+            >
+              {chat.messages[0]?.content.slice(0, 30) || 'New Chat'}...
+            </button>
+          ))}
         </div>
       </motion.div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-4">
-        <div className="max-w-4xl mx-auto">
-          <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-4xl font-bold mb-8 text-center text-white"
-          >
-            Idea Bird Chat
-          </motion.h1>
-          
-          {/* Chat Messages */}
-          <div className="bg-zinc-900 rounded-lg shadow-lg p-4 mb-4 h-[60vh] overflow-y-auto border border-zinc-800 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <AnimatePresence>
-              {messages.map((message, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className={`mb-4 ${
-                    message.role === 'user' ? 'text-right' : 'text-left'
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] lg:h-screen">
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex ${
+                  message.role === 'user' ? 'justify-end' : 'justify-start'
+                }`}
+              >
+                <div
+                  className={`max-w-[85%] sm:max-w-[75%] rounded-lg p-3 sm:p-4 ${
+                    message.role === 'user'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-800 text-white'
                   }`}
                 >
-                  <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.2 }}
-                    className={`inline-block p-3 rounded-lg ${
-                      message.role === 'user'
-                        ? 'bg-white text-black'
-                        : 'bg-zinc-800 text-white'
-                    }`}
-                  >
-                    {message.content}
-                  </motion.div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                  {message.content}
+                </div>
+              </div>
+            ))}
             {currentStreamingMessage && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mb-4 text-left"
-              >
-                <motion.div
-                  initial={{ scale: 0.95 }}
-                  animate={{ scale: 1 }}
-                  className="inline-block p-3 rounded-lg bg-zinc-800 text-white"
-                >
+              <div className="flex justify-start">
+                <div className="max-w-[85%] sm:max-w-[75%] rounded-lg p-3 sm:p-4 bg-gray-800 text-white">
                   {currentStreamingMessage}
-                </motion.div>
-              </motion.div>
-            )}
-            {isLoading && !currentStreamingMessage && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center text-zinc-400"
-              >
-                Thinking...
-              </motion.div>
+                </div>
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>
+        </div>
 
-          {/* Dropdowns */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"
-          >
-            <div>
-              <label className="block text-sm font-medium mb-2">Tone</label>
+        {/* Input Area */}
+        <div className="border-t border-gray-800 p-4 sm:p-6 lg:p-8">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex flex-wrap gap-2 sm:gap-4 mb-4">
               <select
                 value={tone}
                 onChange={(e) => setTone(e.target.value as Tone)}
-                className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-white text-white"
+                className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base"
               >
-                <option value="None">None</option>
+                <option value="None">Tone: None</option>
                 <option value="Funny">Funny</option>
                 <option value="Professional">Professional</option>
                 <option value="Inspirational">Inspirational</option>
                 <option value="Witty">Witty</option>
               </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">Goal</label>
               <select
                 value={goal}
                 onChange={(e) => setGoal(e.target.value as Goal)}
-                className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-white text-white"
+                className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base"
               >
-                <option value="None">None</option>
+                <option value="None">Goal: None</option>
                 <option value="Engagement">Engagement</option>
                 <option value="Informative">Informative</option>
                 <option value="Promotion">Promotion</option>
               </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">Audience</label>
               <select
                 value={audience}
                 onChange={(e) => setAudience(e.target.value as Audience)}
-                className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-white text-white"
+                className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base"
               >
-                <option value="None">None</option>
+                <option value="None">Audience: None</option>
                 <option value="Tech">Tech</option>
                 <option value="Marketing">Marketing</option>
                 <option value="Founders">Founders</option>
                 <option value="General">General</option>
               </select>
             </div>
-          </motion.div>
-
-          {/* Message Input Form */}
-          <motion.form 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            onSubmit={handleSubmit} 
-            className="flex gap-2"
-          >
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Describe what you want to tweet about / Generate a new Idea with AI"
-              className="flex-1 p-2 bg-zinc-900 border border-zinc-800 rounded-lg focus:outline-none focus:border-white text-white placeholder-zinc-500 resize-none min-h-[40px] max-h-[200px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-              rows={1}
-            />
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="submit"
-              disabled={isLoading}
-              className="bg-white text-black px-6 py-2 rounded-lg hover:bg-zinc-200 disabled:bg-zinc-600 disabled:text-zinc-400 transition-colors self-end"
-            >
-              Generate Tweet
-            </motion.button>
-          </motion.form>
+            <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message..."
+                className="flex-1 bg-gray-800 text-white rounded-md p-3 sm:p-4 text-sm sm:text-base resize-none min-h-[44px] sm:min-h-[52px] max-h-32"
+                rows={1}
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 text-white rounded-md text-sm sm:text-base font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Sending...' : 'Send'}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
