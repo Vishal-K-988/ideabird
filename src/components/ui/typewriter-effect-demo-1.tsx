@@ -34,12 +34,14 @@ export default function TypewriterEffectSmoothDemo() {
     },
   ];
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] py-12">
-      <TypewriterEffectSmooth words={words} />
+    <div className="flex flex-col items-center justify-center w-full py-8 sm:py-12 lg:py-16">
+      <div className="w-full max-w-[90vw] sm:max-w-[80vw] md:max-w-[70vw] lg:max-w-[60vw] xl:max-w-[50vw]">
+        <TypewriterEffectSmooth words={words} />
+      </div>
       {isSignedIn ? (
         <HoverBorderGradient
-          containerClassName="w-full sm:w-auto mt-8"
-          className="text-white px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg font-medium"
+          containerClassName="w-full sm:w-auto mt-6 sm:mt-8 lg:mt-10"
+          className="text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-medium"
           onClick={handleClick}
         >
           Generate Engaging Tweets
@@ -47,8 +49,8 @@ export default function TypewriterEffectSmoothDemo() {
       ) : (
         <SignInButton mode="modal">
           <HoverBorderGradient
-            containerClassName="w-full sm:w-auto mt-8"
-            className="text-white px-6 sm:px-8 py-2.5 sm:py-3 text-base sm:text-lg font-medium"
+            containerClassName="w-full sm:w-auto mt-6 sm:mt-8 lg:mt-10"
+            className="text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 text-sm sm:text-base lg:text-lg font-medium"
           >
             Sign in to Generate Tweets
           </HoverBorderGradient>
