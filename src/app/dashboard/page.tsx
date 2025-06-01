@@ -35,8 +35,25 @@ export default function Dashboard() {
   const [audience, setAudience] = useState<Audience>('None');
   const [currentStreamingMessage, setCurrentStreamingMessage] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Handle window resize
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+
+    // Initial check
+    checkScreenSize();
+
+    // Add event listener
+    window.addEventListener('resize', checkScreenSize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   // Load user's chats from S3
   useEffect(() => {
@@ -280,14 +297,14 @@ export default function Dashboard() {
       <motion.div 
         initial={false}
         animate={{
-          x: typeof window !== "undefined" && window.innerWidth >= 1024 ? 0 : isSidebarOpen ? 0 : -320
+          x: isLargeScreen ? 0 : isSidebarOpen ? 0 : -320
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`fixed lg:relative w-80 xl:w-96 bg-gray-900 p-4 sm:p-6 lg:p-8 flex flex-col h-[calc(100vh-4rem)] lg:h-screen z-40 ${
           isSidebarOpen ? 'shadow-2xl' : ''
         }`}
         style={{
-          transform: window.innerWidth >= 1024 ? 'none' : undefined
+          transform: isLargeScreen ? 'none' : undefined
         }}
       >
         <div className="flex justify-between items-center mb-6">
@@ -306,7 +323,7 @@ export default function Dashboard() {
               key={chat.id}
               onClick={() => {
                 setCurrentChatId(chat.id);
-                if (window.innerWidth < 1024) {
+                if (!isLargeScreen) {
                   setIsSidebarOpen(false);
                 }
               }}
