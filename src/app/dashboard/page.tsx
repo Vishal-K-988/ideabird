@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@clerk/nextjs";
 import { saveChatToS3, getChatFromS3, listUserChats, ChatData } from "@/app/utils/s3";
+import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -317,7 +318,7 @@ export default function Dashboard() {
           </button>
         </div>
         
-        <div className="flex flex-col gap-2 overflow-y-auto flex-1">
+        <div className="flex flex-col gap-2 overflow-y-auto flex-1 scrollbar-hide">
           {chats.map((chat) => (
             <button
               key={chat.id}
@@ -342,33 +343,82 @@ export default function Dashboard() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] lg:h-screen">
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scrollbar-hide">
           <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
+            {messages.length === 0 && !currentStreamingMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center text-center space-y-6 py-12"
               >
-                <div
-                  className={`max-w-[85%] sm:max-w-[75%] rounded-lg p-3 sm:p-4 ${
-                    message.role === 'user'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-800 text-white'
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="relative w-48 h-48"
+                >
+                  <Image
+                    src="/chat-welcome.svg"
+                    alt="Welcome to IdeaBird Chat"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </motion.div>
+                <div className="space-y-4">
+                  
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text ">
+                    IdeaBird Chat! 🚀
+                  </h2>
+                  <p className="text-gray-300 text-center text-lg max-w-md">
+                    Transform your ideas into engaging Twitter threads. Just type your prompt and let the magic begin!
+                  </p>
+                </div>
+              </motion.div>
+            )}
+            <AnimatePresence>
+              {messages.map((message, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className={`flex ${
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  {message.content}
-                </div>
-              </div>
-            ))}
-            {currentStreamingMessage && (
-              <div className="flex justify-start">
-                <div className="max-w-[85%] sm:max-w-[75%] rounded-lg p-3 sm:p-4 bg-gray-800 text-white">
-                  {currentStreamingMessage}
-                </div>
-              </div>
-            )}
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className={`max-w-[85%] sm:max-w-[75%] rounded-lg p-3 sm:p-4 ${
+                      message.role === 'user'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-800 text-white'
+                    }`}
+                  >
+                    {message.content}
+                  </motion.div>
+                </motion.div>
+              ))}
+              {currentStreamingMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-start"
+                >
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="max-w-[85%] sm:max-w-[75%] rounded-lg p-3 sm:p-4 bg-gray-800 text-white"
+                  >
+                    {currentStreamingMessage}
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div ref={messagesEndRef} />
           </div>
         </div>
@@ -376,58 +426,57 @@ export default function Dashboard() {
         {/* Input Area */}
         <div className="border-t border-gray-800 p-4 sm:p-6 lg:p-8">
           <div className="max-w-3xl mx-auto">
-            <div className="flex flex-wrap gap-2 sm:gap-4 mb-4">
-              <select
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4">
+              <motion.select
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 value={tone}
                 onChange={(e) => setTone(e.target.value as Tone)}
-                className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base"
+                className="w-full sm:w-auto bg-white dark:bg-zinc-800 text-black dark:text-white px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base border-none shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),_0px_1px_0px_0px_rgba(25,28,33,0.02),_0px_0px_0px_1px_rgba(25,28,33,0.08)] focus:outline-none focus:ring-0"
               >
                 <option value="None">Tone: None</option>
                 <option value="Funny">Funny</option>
                 <option value="Professional">Professional</option>
                 <option value="Inspirational">Inspirational</option>
                 <option value="Witty">Witty</option>
-              </select>
-              <select
+              </motion.select>
+              <motion.select
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 value={goal}
                 onChange={(e) => setGoal(e.target.value as Goal)}
-                className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base"
+                className="w-full sm:w-auto bg-white dark:bg-zinc-800 text-black dark:text-white px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base border-none shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),_0px_1px_0px_0px_rgba(25,28,33,0.02),_0px_0px_0px_1px_rgba(25,28,33,0.08)] focus:outline-none focus:ring-0"
               >
                 <option value="None">Goal: None</option>
                 <option value="Engagement">Engagement</option>
                 <option value="Informative">Informative</option>
                 <option value="Promotion">Promotion</option>
-              </select>
-              <select
+              </motion.select>
+              <motion.select
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 value={audience}
                 onChange={(e) => setAudience(e.target.value as Audience)}
-                className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base"
+                className="w-full sm:w-auto bg-white dark:bg-zinc-800 text-black dark:text-white px-3 sm:px-4 py-2 rounded-full text-sm sm:text-base border-none shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),_0px_1px_0px_0px_rgba(25,28,33,0.02),_0px_0px_0px_1px_rgba(25,28,33,0.08)] focus:outline-none focus:ring-0"
               >
                 <option value="None">Audience: None</option>
                 <option value="Tech">Tech</option>
                 <option value="Marketing">Marketing</option>
                 <option value="Founders">Founders</option>
                 <option value="General">General</option>
-              </select>
+              </motion.select>
             </div>
-            <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
-                className="flex-1 bg-gray-800 text-white rounded-md p-3 sm:p-4 text-sm sm:text-base resize-none min-h-[44px] sm:min-h-[52px] max-h-32"
-                rows={1}
-              />
-              <button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 text-white rounded-md text-sm sm:text-base font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Sending...' : 'Send'}
-              </button>
-            </form>
+            <PlaceholdersAndVanishInput
+              placeholders={[
+                "Create an engaging thread about the latest trends in AI?",
+                "What makes a great Twitter thread?",
+                "How to structure a Twitter thread?",
+                "Tips for engaging Twitter threads",
+                "Best practices for Twitter threads",
+              ]}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
+              onSubmit={handleSubmit}
+            />
           </div>
         </div>
       </div>

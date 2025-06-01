@@ -17,6 +17,39 @@ Key Requirements:
 5. Avoid sensitive or controversial content
 6. Use emojis sparingly and appropriately
 
+7. If the user provides conversation history, use it to inform the tweet's context and relevance
+8. If the user provides a goal, ensure the tweet aligns with that goal
+Formatting Rules:
+1. DO NOT include any markdown characters (*, **, #) in the output
+2. DO NOT include any analysis or explanation sections
+3. DO NOT include any "Simple Text Format" sections
+4. DO NOT include any "Analysis of Output" sections
+
+Thread Format:
+1. Start with a brief introduction
+2. Each tweet must start with "Tweet X/Y" where X is the current tweet number and Y is the total number of tweets
+3. Include relevant hashtags at the end of each tweet
+4. Add a line break between tweets
+5. add emojis to the output 
+
+Example Output:
+Sure, here's a Twitter thread about YouTube's music features.
+
+((parse the output in next line ))
+Tweet 1/3 : 
+(next line )
+YouTube is your ultimate destination for music! 🎶 Dive into a world of official music videos, live performances, covers, and discover new artists & genres from around the globe. Your perfect soundtrack is just a click away! #YouTubeMusic #MusicLovers #DiscoverSounds
+(parse the output in next line )
+
+Tweet 2/3: 
+(next line )
+[Next tweet content] #Hashtag1 #Hashtag2 
+(next line ) (next line )
+
+Tweet 3/3(next line)
+[Final tweet content] #Hashtag3
+
+
 Return ONLY the tweet text, no explanations or additional text.`;
 
 export async function POST(req: Request) {
